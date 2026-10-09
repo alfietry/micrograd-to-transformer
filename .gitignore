@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Experiment artifacts (commit small figures/metrics, not checkpoints)
+runs/
+wandb/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+data/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.vscode/
+.idea/
