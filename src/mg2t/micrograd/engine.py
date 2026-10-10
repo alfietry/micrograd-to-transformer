@@ -27,36 +27,80 @@ class Value:
 
     def __add__(self, other) -> Value:
         other = other if isinstance(other, Value) else Value(other)
-        # TODO: create the output Value and define its _backward
-        raise NotImplementedError
+        out = Value(self.data + other.data, (self, other), "+")
+
+        def _backward():
+            self.grad += out.grad
+            other.grad += out.grad
+
+        out._backward = _backward
+        return out
 
     def __mul__(self, other) -> Value:
         other = other if isinstance(other, Value) else Value(other)
-        # TODO
-        raise NotImplementedError
+        out = Value(self.data * other.data, (self, other), "*")
+
+        def _backward():
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
+
+        out._backward = _backward
+        return out
 
     def __pow__(self, k: float) -> Value:
         assert isinstance(k, (int, float)), "only constant powers are supported"
-        # TODO
-        raise NotImplementedError
+        out = Value(self.data ** k, (self,), f"**{k}")
+
+        def _backward():
+            self.grad += (k * self.data ** (k - 1)) * out.grad
+
+        out._backward = _backward
+        return out
 
     def exp(self) -> Value:
-        # TODO
-        raise NotImplementedError
+        out = Value(math.exp(self.data), (self,), "exp")
+
+        def _backward():
+            self.grad += out.data * out.grad
+
+        out._backward = _backward
+        return out
 
     def tanh(self) -> Value:
-        # TODO
-        raise NotImplementedError
+        out = Value(math.tanh(self.data), (self,), "tanh")
+
+        def _backward():
+            self.grad += (1 - out.data ** 2) * out.grad
+
+        out._backward = _backward
+        return out
 
     def relu(self) -> Value:
-        # TODO
-        raise NotImplementedError
+        out = Value(max(0.0, self.data), (self,), "relu")
+
+        def _backward():
+            self.grad += (1.0 if self.data > 0 else 0.0) * out.grad
+
+        out._backward = _backward
+        return out
 
     def backward(self) -> None:
         """Fill in .grad for every node that this Value depends on."""
-        # TODO: order the graph so each node comes after its children,
-        # set this node's grad, then call _backward in reverse order.
-        raise NotImplementedError
+        topo = []
+        visited = set()
+
+        def build_topo(v: Value):
+            if v in visited:
+                return
+            visited.add(v)
+            for child in v._prev:
+                build_topo(child)
+            topo.append(v)
+
+        build_topo(self)
+        self.grad = 1.0
+        for node in reversed(topo):
+            node._backward()
 
     # ---- Derived operations: already done, built from the core ones ----
 

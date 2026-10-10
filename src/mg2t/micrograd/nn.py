@@ -22,8 +22,8 @@ class Neuron(Module):
         self.nonlin = nonlin
 
     def __call__(self, x: list) -> Value:
-        # TODO: weighted sum plus bias, then tanh if self.nonlin
-        raise NotImplementedError
+        act = sum((wi * xi for wi, xi in zip(self.w, x)), self.b)
+        return act.tanh() if self.nonlin else act
 
     def parameters(self) -> list[Value]:
         return self.w + [self.b]
@@ -34,8 +34,8 @@ class Layer(Module):
         self.neurons = [Neuron(nin, **kwargs) for _ in range(nout)]
 
     def __call__(self, x: list):
-        # TODO: apply every neuron; return a single Value if there is only one
-        raise NotImplementedError
+        out = [n(x) for n in self.neurons]
+        return out[0] if len(out) == 1 else out
 
     def parameters(self) -> list[Value]:
         return [p for n in self.neurons for p in n.parameters()]
@@ -50,8 +50,9 @@ class MLP(Module):
         ]
 
     def __call__(self, x: list):
-        # TODO: pass x through each layer in turn
-        raise NotImplementedError
+        for layer in self.layers:
+            x = layer(x)
+        return x
 
     def parameters(self) -> list[Value]:
         return [p for layer in self.layers for p in layer.parameters()]
