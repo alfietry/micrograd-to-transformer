@@ -23,7 +23,7 @@ class Value:
     def __repr__(self) -> str:
         return f"Value(data={self.data:.4f}, grad={self.grad:.4f})"
 
-    # ---- Core operations: implement these ------------------------------
+    # ---- Core operations  ------------------------------
 
     def __add__(self, other) -> Value:
         other = other if isinstance(other, Value) else Value(other)
@@ -87,15 +87,22 @@ class Value:
     def backward(self) -> None:
         """Fill in .grad for every node that this Value depends on."""
         topo = []
-        visited = set()
+        seen = set()
 
         def build_topo(v: Value):
-            if v in visited:
-                return
-            visited.add(v)
-            for child in v._prev:
-                build_topo(child)
-            topo.append(v)
+            stack = [(v, False)]
+            while stack:
+                node, expanded = stack.pop()
+                if expanded:
+                    topo.append(node)
+                    continue
+                if node in seen:
+                    continue
+                seen.add(node)
+                stack.append((node, True))
+                for child in reversed(tuple(node._prev)):
+                    if child not in seen:
+                        stack.append((child, False))
 
         build_topo(self)
         self.grad = 1.0
@@ -124,7 +131,3 @@ class Value:
 
     def __rtruediv__(self, other) -> Value:
         return other * self**-1
-
-
-# `math` is imported for you; you'll likely need it.
-_ = math
